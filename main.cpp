@@ -3,8 +3,12 @@
 
 
 static void HandleDefinition() {
-    if (ParseDefinition()) {
-        fprintf(stderr, "Parsed a function definition.\n");
+    if (auto FnAST = ParseDefinition()) {
+        if (auto *FnIR = FnAST->codegen()) {
+            fprintf(stderr, "Read function definition:");
+            FnIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+        }
     } else {
         // Skip token for error recovery.
         getNextToken();
@@ -12,8 +16,12 @@ static void HandleDefinition() {
 }
 
 static void HandleExtern() {
-    if (ParseExtern()) {
-        fprintf(stderr, "Parsed an extern\n");
+    if (auto ProtoAST = ParseExtern()) {
+        if (auto *FnIR = ProtoAST->codegen()) {
+            fprintf(stderr, "Read extern: ");
+            FnIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+        }
     } else {
         // Skip token for error recovery.
         getNextToken();
@@ -22,13 +30,21 @@ static void HandleExtern() {
 
 static void HandleTopLevelExpression() {
     // Evaluate a top-level expression into an anonymous function.
-    if (ParseTopLevelExpr()) {
-        fprintf(stderr, "Parsed a top-level expr\n");
+    if (auto FnAST = ParseTopLevelExpr()) {
+        if (auto *FnIR = FnAST->codegen()) {
+            fprintf(stderr, "Read top-level expression:");
+            FnIR->print(llvm::errs());
+            fprintf(stderr, "\n");
+
+            // Remove the anonymous expression.
+            FnIR->eraseFromParent();
+        }
     } else {
         // Skip token for error recovery.
         getNextToken();
     }
 }
+
 
 /// top ::= definition | external | expression | ';'
 static void MainLoop() {
@@ -54,19 +70,28 @@ static void MainLoop() {
 }
 
 int main() {
-    // Install standard binary operators.
-    // 1 is lowest precedence.
-    BinopPrecedence['<'] = 10;
-    BinopPrecedence['+'] = 20;
-    BinopPrecedence['-'] = 20;
-    BinopPrecedence['*'] = 40;  // highest.
+    try {
+        // Install standard binary operators.
+        // 1 is lowest precedence.
+        BinopPrecedence['<'] = 10;
+        BinopPrecedence['+'] = 20;
+        BinopPrecedence['-'] = 20;
+        BinopPrecedence['*'] = 40;  // highest.
 
-    // Prime the first token.
-    fprintf(stderr, "ready> ");
-    getNextToken();
+        // Prime the first token.
+        fprintf(stderr, "ready> ");
+        getNextToken();
 
-    // Run the main "interpreter loop" now.
-    MainLoop();
+        TheModule = std::make_unique<llvm::Module>("My awesome JIT", TheContext);
+
+        // Run the main "interpreter loop" now.
+        MainLoop();
+
+        // Print out all of the generated code.
+        TheModule->print(llvm::errs(), nullptr);
+    } catch (const std::exception &e) {
+        fprintf(stderr, "%s", e.what());
+    }
 
     return 0;
 }

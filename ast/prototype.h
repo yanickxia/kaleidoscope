@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include "../kaleidoscope/kaleidoscope.h"
 
 /// PrototypeAST - This class represents the "prototype" for a function,
 /// which captures its name, and its argument names (thus implicitly the number
@@ -20,6 +21,7 @@ public:
             : Name(name), Args(std::move(Args)) {}
 
     const std::string &getName() const { return Name; }
+    llvm::Function *codegen();
 };
 
 #endif //KALEIDOSCOPE_PROTOTYPE_H

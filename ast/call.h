@@ -10,6 +10,8 @@
 #include <vector>
 #include <memory>
 #include "ast.h"
+#include "../kaleidoscope/kaleidoscope.h"
+#include "../log/log.h"
 
 /// CallExprAST - Expression class for function calls.
 class CallExprAST : public ExprAST {
@@ -20,6 +22,7 @@ public:
     CallExprAST(const std::string &Callee,
                 std::vector<std::unique_ptr<ExprAST>> Args)
             : Callee(Callee), Args(std::move(Args)) {}
+    llvm::Value *codegen() override;
 };
 
 #endif //KALEIDOSCOPE_CALL_H
