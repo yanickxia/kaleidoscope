@@ -5,6 +5,8 @@
 #ifndef KALEIDOSCOPE_KALEIDOSCOPE_H
 #define KALEIDOSCOPE_KALEIDOSCOPE_H
 
+#include <map>
+
 #include "../llvm/llvm.h"
 
 // This is an object that owns LLVM core data structures
