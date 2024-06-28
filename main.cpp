@@ -49,6 +49,7 @@ static void HandleTopLevelExpression () {
 
             // Search the JIT for the __anon_expr symbol.
             // auto ExprSymbol = TheJIT->lookup ("__anon_expr");
+            // 找到 入口函数，这里和  ParseTopLevelExpr 中保持一致
             auto ExprSymbol = TheJIT->lookup ("__anon_expr");
             assert (ExprSymbol && "Function not found");
 
