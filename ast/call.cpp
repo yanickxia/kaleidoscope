@@ -3,11 +3,13 @@
 //
 
 #include "call.h"
+#include "../log/log.h"
+#include "function.h"
 
 llvm::Value* CallExprAST::codegen()
 {
   // Look up the name in the global module table.
-  llvm::Function* CalleeF = TheModule->getFunction(Callee);
+  llvm::Function* CalleeF = getFunction(Callee);
   if (!CalleeF)
     return LogErrorV("Unknown function referenced");
 

@@ -9,9 +9,9 @@
 
 /// ExprAST - Base class for all expression nodes.
 class ExprAST {
-public:
-    virtual ~ExprAST() = default;
-    virtual llvm::Value *codegen() = 0;
+    public:
+    virtual ~ExprAST ()             = default;
+    virtual llvm::Value* codegen () = 0;
 };
 
-#endif //KALEIDOSCOPE_AST_H
+#endif // KALEIDOSCOPE_AST_H

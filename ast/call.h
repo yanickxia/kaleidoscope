@@ -11,7 +11,7 @@
 #include <memory>
 #include "ast.h"
 #include "../kaleidoscope/kaleidoscope.h"
-#include "../log/log.h"
+
 
 /// CallExprAST - Expression class for function calls.
 class CallExprAST : public ExprAST {
