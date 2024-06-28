@@ -5,5 +5,5 @@
 #include "num.h"
 
 llvm::Value *NumberExprAST::codegen() {
-    return llvm::ConstantFP::get(TheContext, llvm::APFloat(Val));
+  return llvm::ConstantFP::get(*TheContext, llvm::APFloat(Val));
 }
