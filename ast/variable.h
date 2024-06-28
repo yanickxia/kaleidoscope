@@ -9,13 +9,18 @@
 #include "../log/log.h"
 #include "ast.h"
 #include <string>
+
 /// VariableExprAST - Expression class for referencing a variable, like "a".
-class VariableExprAST : public ExprAST {
+class VariableExprAST : public ExprAST
+{
   std::string Name;
 
 public:
-  VariableExprAST(const std::string &Name) : Name(Name) {}
-  llvm::Value *codegen() override;
+  VariableExprAST(const std::string& Name) : Name(Name)
+  {
+  }
+
+  llvm::Value* codegen() override;
 };
 
 #endif // KALEIDOSCOPE_VARIABLE_H

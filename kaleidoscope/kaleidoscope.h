@@ -7,7 +7,7 @@
 
 #include <map>
 
-#include "../ast/prototype.h"
+// #include "../ast/prototype.h"
 #include "../llvm/llvm.h"
 #include <map>
 
@@ -25,13 +25,14 @@ extern std::map<std::string, llvm::Value *> NamedValues;
 
 void InitializeModuleAndManagers();
 
-// extern std::unique_ptr<llvm::FunctionPassManager> TheFPM;
-// extern std::unique_ptr<llvm::LoopAnalysisManager> TheLAM;
-// extern std::unique_ptr<llvm::FunctionAnalysisManager> TheFAM;
-// extern std::unique_ptr<llvm::CGSCCAnalysisManager> TheCGAM;
-// extern std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
-// extern std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
-// extern std::unique_ptr<llvm::StandardInstrumentations> TheSI;
+// pass and analysis managers.
+extern std::unique_ptr<llvm::FunctionPassManager> TheFPM;
+extern std::unique_ptr<llvm::LoopAnalysisManager> TheLAM;
+extern std::unique_ptr<llvm::FunctionAnalysisManager> TheFAM;
+extern std::unique_ptr<llvm::CGSCCAnalysisManager> TheCGAM;
+extern std::unique_ptr<llvm::ModuleAnalysisManager> TheMAM;
+extern std::unique_ptr<llvm::PassInstrumentationCallbacks> ThePIC;
+extern std::unique_ptr<llvm::StandardInstrumentations> TheSI;
 // extern std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
 #endif // KALEIDOSCOPE_KALEIDOSCOPE_H

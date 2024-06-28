@@ -4,36 +4,42 @@
 
 #include "function.h"
 
-llvm::Function *FunctionAST::codegen() {
+llvm::Function* FunctionAST::codegen()
+{
   // First, check for an existing function from a previous 'extern' declaration.
 
-  llvm::Function *TheFunction = nullptr;
+  llvm::Function* TheFunction = nullptr;
 
-  if (!Proto->getName().empty()) {
+  if (!Proto->getName().empty())
+  {
     TheFunction = TheModule->getFunction(Proto->getName());
   }
 
-  if (!TheFunction) {
+  if (!TheFunction)
+  {
     TheFunction = Proto->codegen();
   }
 
   if (!TheFunction)
     return nullptr;
 
-  if (!TheFunction->empty()) {
-    return (llvm::Function *)LogErrorV("Function cannot be redefined.");
+  if (!TheFunction->empty())
+  {
+    return (llvm::Function*)LogErrorV("Function cannot be redefined.");
   }
   // Create a new basic block to start insertion into.
-  llvm::BasicBlock *BB =
-      llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
+  llvm::BasicBlock* BB =
+    llvm::BasicBlock::Create(*TheContext, "entry", TheFunction);
   Builder->SetInsertPoint(BB);
 
   // Record the function arguments in the NamedValues map.
   NamedValues.clear();
-  for (auto &Arg : TheFunction->args()) {
+  for (auto& Arg : TheFunction->args())
+  {
     NamedValues[Arg.getName().str()] = &Arg;
   }
-  if (llvm::Value *RetVal = Body->codegen()) {
+  if (llvm::Value* RetVal = Body->codegen())
+  {
     // Finish off the function.
     Builder->CreateRet(RetVal);
 
