@@ -4,7 +4,8 @@
 
 #include "num.h"
 
-llvm::Value* NumberExprAST::codegen()
-{
-  return llvm::ConstantFP::get(*TheContext, llvm::APFloat(Val));
+#include "../kaleidoscope/kaleidoscope.h"
+
+llvm::Value* NumberExprAST::codegen () {
+    return llvm::ConstantFP::get (*TheContext, llvm::APFloat (Val));
 }

@@ -16,6 +16,8 @@
 #include "../ast/call.h"
 #include "../ast/binary.h"
 #include "../ast/function.h"
+#include "../ast/if.h"
+#include "../ast/for.h"
 
 extern std::map<char, int> BinopPrecedence;
 

@@ -22,7 +22,11 @@ set(SOURCES
         log/log.cpp log/log.h llvm/llvm.h kaleidoscope/kaleidoscope.cpp kaleidoscope/kaleidoscope.h
         jit/jit.h
         extern/extern.h
-        extern/extern.h)
+        extern/extern.h
+        ast/if.h
+        ast/if.cpp
+        ast/for.cpp
+        ast/for.h)
 
 add_executable(kaleidoscope ${SOURCES})
 target_link_libraries(kaleidoscope ${llvm_libs})

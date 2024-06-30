@@ -27,9 +27,9 @@ llvm::Function *getFunction (std::string Name) {
 llvm::Function *FunctionAST::codegen () {
     // Transfer ownership of the prototype to the FunctionProtos map, but keep a
     // reference to it for use below.
-    auto &P = *Proto;
-    FunctionProtos[Proto->getName()] = std::move(Proto);
-    llvm::Function *TheFunction = getFunction(P.getName());
+    auto &P                           = *Proto;
+    FunctionProtos[Proto->getName ()] = std::move (Proto);
+    llvm::Function *TheFunction       = getFunction (P.getName ());
     if (!TheFunction)
         return nullptr;
 
