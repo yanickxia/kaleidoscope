@@ -28,6 +28,8 @@ extern llvm::ExitOnError ExitOnErr;
 
 extern std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 
+extern std::map<char, int> BinopPrecedence;
+
 
 void InitializeModuleAndPassManager ();
 void InitJIT ();

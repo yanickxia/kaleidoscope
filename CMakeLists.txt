@@ -26,7 +26,9 @@ set(SOURCES
         ast/if.h
         ast/if.cpp
         ast/for.cpp
-        ast/for.h)
+        ast/for.h
+        ast/unary.cpp
+        ast/unary.h)
 
 add_executable(kaleidoscope ${SOURCES})
 target_link_libraries(kaleidoscope ${llvm_libs})

@@ -17,7 +17,7 @@ std::make_unique<llvm::IRBuilder<>> (*TheContext);
 std::unique_ptr<llvm::Module> TheModule;
 
 // This map keeps track of which values are defined in the current scope
-std::map<std::string, llvm::Value *> NamedValues;
+std::map<std::string, llvm::Value*> NamedValues;
 
 std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
 
@@ -27,13 +27,15 @@ llvm::ExitOnError ExitOnErr;
 std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 // std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
+std::map<char, int> BinopPrecedence;
+
 void InitJIT () {
     llvm::InitializeNativeTarget ();
     llvm::InitializeNativeTargetAsmPrinter ();
     llvm::InitializeNativeTargetAsmParser ();
 
     TheJIT      = ExitOnErr (llvm::orc::KaleidoscopeJIT::Create ());
-    auto &jd    = TheJIT->getMainJITDylib ();
+    auto& jd    = TheJIT->getMainJITDylib ();
     auto mangle = llvm::orc::MangleAndInterner (
     jd.getExecutionSession (), TheJIT->getDataLayout ());
 
