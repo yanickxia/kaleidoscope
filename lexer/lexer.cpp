@@ -14,20 +14,20 @@ double NumVal;
 // It's called to return the next token from standard input
 // gettok works by calling getchar() function to read chars one at a time
 // Then it recognizes them and stores the last character read in LastChar
-int gettok () {
+int gettok() {
     static int LastChar = ' ';
 
     // The first thing we need to do is ignore whitespaces between tokens
-    while (isspace (LastChar)) {
-        LastChar = getchar ();
+    while (isspace(LastChar)) {
+        LastChar = getchar();
     }
 
     // Next thing is recognize identifier and specific keywords like "def"
-    if (isalpha (LastChar)) {
+    if (isalpha(LastChar)) {
         IdentifierStr = LastChar;
 
         // Stacking together all alphanumeric characters into IdentifierStr
-        while (isalnum (LastChar = getchar ())) {
+        while (isalnum(LastChar = getchar())) {
             IdentifierStr += LastChar;
         }
 
@@ -60,21 +60,24 @@ int gettok () {
         if (IdentifierStr == "unary")
             return tok_unary;
 
+        if (IdentifierStr == "var")
+            return tok_var;
+
         return tok_identifier;
     }
 
     // Stacking together only numeric values
-    if (isdigit (LastChar) || LastChar == '.') {
+    if (isdigit(LastChar) || LastChar == '.') {
         std::string NumStr;
 
         do {
             NumStr += LastChar;
-            LastChar = getchar ();
-        } while (isdigit (LastChar) || LastChar == '.');
+            LastChar = getchar();
+        } while (isdigit(LastChar) || LastChar == '.');
 
         // Convert numeric string to numeric value
         // that we are store in NumVal
-        NumVal = strtod (NumStr.c_str (), 0);
+        NumVal = strtod(NumStr.c_str(), 0);
         return tok_number;
     }
 
@@ -82,11 +85,11 @@ int gettok () {
     // and return the next token
     if (LastChar == '#') {
         do {
-            LastChar = getchar ();
+            LastChar = getchar();
         } while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 
         if (LastChar != EOF) {
-            return gettok ();
+            return gettok();
         }
     }
 
@@ -97,10 +100,10 @@ int gettok () {
     }
 
     int ThisChar = LastChar;
-    LastChar     = getchar ();
+    LastChar = getchar();
     return ThisChar;
 }
 
-int getNextToken () {
-    return CurTok = gettok ();
+int getNextToken() {
+    return CurTok = gettok();
 }

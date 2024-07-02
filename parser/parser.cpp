@@ -2,8 +2,9 @@
 // Created by yanick on 2022/12/13.
 //
 
-
 #include "parser.h"
+
+#include "../ast/var.h"
 
 /// numberexpr ::= number
 std::unique_ptr<ExprAST> ParseNumberExpr() {
@@ -86,10 +87,7 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
     if (!Else)
         return nullptr;
 
-    return std::make_unique<IfExprAST>(
-        std::move(Cond),
-        std::move(Then),
-        std::move(Else));
+    return std::make_unique<IfExprAST>(std::move(Cond), std::move(Then), std::move(Else));
 }
 
 /// forexpr ::= 'for' identifier '=' expr ',' expr (',' expr)? 'in' expression
@@ -142,6 +140,52 @@ static std::unique_ptr<ExprAST> ParseForExpr() {
         std::move(Body));
 }
 
+/// varexpr ::= 'var' identifier ('=' expression)?
+//                    (',' identifier ('=' expression)?)* 'in' expression
+static std::unique_ptr<ExprAST> ParseVarExpr() {
+    getNextToken(); // eat the var.
+
+    std::vector<std::pair<std::string, std::unique_ptr<ExprAST>>> VarNames;
+
+    // At least one variable name is required.
+    if (CurTok != tok_identifier)
+        return LogError("expected identifier after var");
+    while (1) {
+        std::string Name = IdentifierStr;
+        getNextToken(); // eat identifier.
+
+        // Read the optional initializer.
+        std::unique_ptr<ExprAST> Init;
+        if (CurTok == '=') {
+            getNextToken(); // eat the '='.
+
+            Init = ParseExpression();
+            if (!Init)
+                return nullptr;
+        }
+
+        VarNames.push_back(std::make_pair(Name, std::move(Init)));
+
+        // End of var list, exit loop.
+        if (CurTok != ',')
+            break;
+        getNextToken(); // eat the ','.
+
+        if (CurTok != tok_identifier)
+            return LogError("expected identifier list after var");
+    }
+    // At this point, we have to have 'in'.
+    if (CurTok != tok_in)
+        return LogError("expected 'in' keyword after 'var'");
+    getNextToken(); // eat 'in'.
+
+    auto Body = ParseExpression();
+    if (!Body)
+        return nullptr;
+
+    return std::make_unique<VarExprAST>(std::move(VarNames), std::move(Body));
+}
+
 /// primary
 ///   ::= identifierexpr
 ///   ::= numberexpr
@@ -160,6 +204,8 @@ std::unique_ptr<ExprAST> ParsePrimary() {
             return ParseIfExpr();
         case tok_for:
             return ParseForExpr();
+        case tok_var:
+            return ParseVarExpr();
     }
 }
 
@@ -234,7 +280,6 @@ std::unique_ptr<ExprAST> ParseUnary() {
     return nullptr;
 }
 
-
 /// prototype
 ///   ::= id '(' id* ')'
 ///   ::= binary LETTER number? (id, id)
@@ -270,7 +315,7 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
             Kind = 2;
             getNextToken();
 
-        // Read the precedence if present.
+            // Read the precedence if present.
             if (CurTok == tok_number) {
                 if (NumVal < 1 || NumVal > 100)
                     return LogErrorP("Invalid precedence: must be 1..100");
@@ -296,11 +341,7 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
     if (Kind && ArgNames.size() != Kind)
         return LogErrorP("Invalid number of operands for operator");
 
-    return std::make_unique<PrototypeAST>(
-        FnName,
-        std::move(ArgNames),
-        Kind != 0,
-        BinaryPrecedence);
+    return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames), Kind != 0, BinaryPrecedence);
 }
 
 /// definition ::= 'def' prototype expression
@@ -321,13 +362,11 @@ std::unique_ptr<PrototypeAST> ParseExtern() {
     return ParsePrototype();
 }
 
-
 /// toplevelexpr ::= expression
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
     if (auto E = ParseExpression()) {
         // Make an anonymous proto.
-        auto Proto =
-            std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
+        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
     }
     return nullptr;

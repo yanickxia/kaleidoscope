@@ -5,6 +5,7 @@
 #include "function.h"
 
 #include "../log/log.h"
+#include "variable.h"
 
 std::map<std::string, std::unique_ptr<PrototypeAST>> FunctionProtos;
 
@@ -22,7 +23,6 @@ llvm::Function* getFunction(std::string Name) {
     // If no existing prototype exists, return null.
     return nullptr;
 }
-
 
 llvm::Function* FunctionAST::codegen() {
     // Transfer ownership of the prototype to the FunctionProtos map, but keep a
@@ -43,8 +43,16 @@ llvm::Function* FunctionAST::codegen() {
 
     // Record the function arguments in the NamedValues map.
     NamedValues.clear();
-    for (auto& Arg : TheFunction->args())
-        NamedValues[std::string(Arg.getName())] = &Arg;
+    for (auto& Arg : TheFunction->args()) {
+        // Create an alloca for this variable.
+        llvm::AllocaInst* Alloca = CreateEntryBlockAlloca(TheFunction, Arg.getName());
+
+        // Store the initial value into the alloca.
+        Builder->CreateStore(&Arg, Alloca);
+
+        // Add arguments to variable symbol table.
+        NamedValues[std::string(Arg.getName())] = Alloca;
+    }
 
     if (llvm::Value* RetVal = Body->codegen()) {
         // Finish off the function.
@@ -58,8 +66,10 @@ llvm::Function* FunctionAST::codegen() {
 
         return TheFunction;
     }
-
     // Error reading body, remove function.
     TheFunction->eraseFromParent();
+
+    if (P.isBinaryOp())
+        BinopPrecedence.erase(P.getOperatorName());
     return nullptr;
 }

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20.1)
 project(kaleidoscope)
 
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM 14 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
@@ -28,7 +28,9 @@ set(SOURCES
         ast/for.cpp
         ast/for.h
         ast/unary.cpp
-        ast/unary.h)
+        ast/unary.h
+        ast/var.cpp
+        ast/var.h)
 
 add_executable(kaleidoscope ${SOURCES})
 target_link_libraries(kaleidoscope ${llvm_libs})

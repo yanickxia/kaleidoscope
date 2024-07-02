@@ -17,7 +17,7 @@ std::make_unique<llvm::IRBuilder<>> (*TheContext);
 std::unique_ptr<llvm::Module> TheModule;
 
 // This map keeps track of which values are defined in the current scope
-std::map<std::string, llvm::Value*> NamedValues;
+std::map<std::string, llvm::AllocaInst*> NamedValues;
 
 std::unique_ptr<llvm::orc::KaleidoscopeJIT> TheJIT;
 
@@ -65,6 +65,8 @@ void InitializeModuleAndPassManager () {
     Builder = std::make_unique<llvm::IRBuilder<>> (*TheContext);
 
     TheFPM = std::make_unique<llvm::legacy::FunctionPassManager> (TheModule.get ());
+    // Promote allocas to registers.
+    TheFPM->add(llvm::createPromoteMemoryToRegisterPass());
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     TheFPM->add (llvm::createInstructionCombiningPass ());
     // Reassociate expressions.
