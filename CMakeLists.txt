@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20.1)
 project(kaleidoscope)
 
+
+# package search for brew install packages
+set(CMAKE_PREFIX_PATH "/usr/local/opt/llvm@14/" ${CMAKE_PREFIX_PATH})
+
 find_package(LLVM 14 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
