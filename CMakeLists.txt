@@ -9,12 +9,18 @@ find_package(LLVM 14 REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+message(STATUS "Using llvm libs in: ${LLVM_LIBRARY_DIRS}")
 
 include_directories(${LLVM_INCLUDE_DIRS})
+link_directories(${LLVM_LIBRARY_DIRS})
+
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
-llvm_map_components_to_libnames(llvm_libs core orcjit native)
+# if export object file, should uncomment this
+add_definitions(-DEXPORT_TO_OBJECT)
+
+#llvm_map_components_to_libnames(llvm_libs llvm)
 
 set(CMAKE_CXX_STANDARD 17)
 set(SOURCES
@@ -37,4 +43,11 @@ set(SOURCES
         ast/var.h)
 
 add_executable(kaleidoscope ${SOURCES})
-target_link_libraries(kaleidoscope ${llvm_libs})
+target_link_libraries(kaleidoscope LLVM-14)
+
+
+
+# for example
+set(EXAMPLE_SOURCES example/main.cpp cmake-build-debug/output.o)
+add_executable(kaleidoscope_demo ${EXAMPLE_SOURCES})
+target_link_libraries(kaleidoscope_demo)

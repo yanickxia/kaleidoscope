@@ -10,8 +10,7 @@
 std::unique_ptr<llvm::LLVMContext> TheContext;
 
 // This is a helper object that makes easy to generate LLVM instructions
-std::unique_ptr<llvm::IRBuilder<>> Builder =
-std::make_unique<llvm::IRBuilder<>> (*TheContext);
+std::unique_ptr<llvm::IRBuilder<>> Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
 // This is an LLVM construct that contains functions and global variables
 std::unique_ptr<llvm::Module> TheModule;
@@ -29,52 +28,56 @@ std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 
 std::map<char, int> BinopPrecedence;
 
-void InitJIT () {
-    llvm::InitializeNativeTarget ();
-    llvm::InitializeNativeTargetAsmPrinter ();
-    llvm::InitializeNativeTargetAsmParser ();
+void InitJIT() {
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+#ifndef EXPORT_TO_OBJECT
+    TheJIT = ExitOnErr(llvm::orc::KaleidoscopeJIT::Create());
+    auto& jd = TheJIT->getMainJITDylib();
+    auto mangle = llvm::orc::MangleAndInterner(jd.getExecutionSession(), TheJIT->getDataLayout());
 
-    TheJIT      = ExitOnErr (llvm::orc::KaleidoscopeJIT::Create ());
-    auto& jd    = TheJIT->getMainJITDylib ();
-    auto mangle = llvm::orc::MangleAndInterner (
-    jd.getExecutionSession (), TheJIT->getDataLayout ());
-
-    auto s = [] (llvm::orc::MangleAndInterner interner) {
+    auto s = [](llvm::orc::MangleAndInterner interner) {
         llvm::orc::SymbolMap symbolMap;
-        symbolMap[interner ("putchard")] = {
-            llvm::pointerToJITTargetAddress (&putchard),
-            llvm::JITSymbolFlags (),
+        symbolMap[interner("putchard")] = {
+            llvm::pointerToJITTargetAddress(&putchard),
+            llvm::JITSymbolFlags(),
         };
-        symbolMap[interner ("printd")] = {
-            llvm::pointerToJITTargetAddress (&printd),
-            llvm::JITSymbolFlags (),
+        symbolMap[interner("printd")] = {
+            llvm::pointerToJITTargetAddress(&printd),
+            llvm::JITSymbolFlags(),
         };
-        return llvm::orc::absoluteSymbols (symbolMap);
+        return llvm::orc::absoluteSymbols(symbolMap);
     }(mangle);
 
-    ExitOnErr (jd.define (s));
+    ExitOnErr(jd.define(s));
+#endif
 }
 
-
-void InitializeModuleAndPassManager () {
+void InitializeModuleAndPassManager() {
     // Open a new context and module.
-    TheContext = std::make_unique<llvm::LLVMContext> ();
-    TheModule  = std::make_unique<llvm::Module> ("My awesome JIT", *TheContext);
-    TheModule->setDataLayout (TheJIT->getDataLayout ());
+    TheContext = std::make_unique<llvm::LLVMContext>();
+    TheModule = std::make_unique<llvm::Module>("My awesome JIT", *TheContext);
     // Create a new builder for the module.
-    Builder = std::make_unique<llvm::IRBuilder<>> (*TheContext);
+    Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
-    TheFPM = std::make_unique<llvm::legacy::FunctionPassManager> (TheModule.get ());
+#ifndef EXPORT_TO_OBJECT
+    TheModule->setDataLayout(TheJIT->getDataLayout());
+
+    TheFPM = std::make_unique<llvm::legacy::FunctionPassManager>(TheModule.get());
     // Promote allocas to registers.
     TheFPM->add(llvm::createPromoteMemoryToRegisterPass());
     // Do simple "peephole" optimizations and bit-twiddling optzns.
-    TheFPM->add (llvm::createInstructionCombiningPass ());
+    TheFPM->add(llvm::createInstructionCombiningPass());
     // Reassociate expressions.
-    TheFPM->add (llvm::createReassociatePass ());
+    TheFPM->add(llvm::createReassociatePass());
     // Eliminate Common SubExpressions.
-    TheFPM->add (llvm::createGVNPass ());
+    TheFPM->add(llvm::createGVNPass());
     // Simplify the control flow graph (deleting unreachable blocks, etc).
-    TheFPM->add (llvm::createCFGSimplificationPass ());
+    TheFPM->add(llvm::createCFGSimplificationPass());
 
-    TheFPM->doInitialization ();
+    TheFPM->doInitialization();
+#endif
 }
