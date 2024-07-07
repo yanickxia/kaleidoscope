@@ -17,6 +17,11 @@ public:
         : Opcode(Opcode), Operand(std::move(Operand)) {}
 
     llvm::Value* codegen() override;
+    llvm::raw_ostream &dump(llvm::raw_ostream &out, int ind) override {
+        ExprAST::dump(out << "unary" << Opcode, ind);
+        Operand->dump(out, ind + 1);
+        return out;
+    }
 };
 
 #endif //KALEIDOSCOPE_UNARY_H

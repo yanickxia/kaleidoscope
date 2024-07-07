@@ -26,7 +26,8 @@ llvm::Value* VarExprAST::codegen() {
             InitVal = Init->codegen();
             if (!InitVal)
                 return nullptr;
-        } else { // If not specified, use 0.0.
+        } else {
+            // If not specified, use 0.0.
             InitVal = llvm::ConstantFP::get(*TheContext, llvm::APFloat(0.0));
         }
 
@@ -40,6 +41,7 @@ llvm::Value* VarExprAST::codegen() {
         // Remember this binding.
         NamedValues[VarName] = Alloca;
     }
+    KSDbgInfo.emitLocation(this);
     // Codegen the body, now that all vars are in scope.
     llvm::Value* BodyVal = Body->codegen();
     if (!BodyVal)

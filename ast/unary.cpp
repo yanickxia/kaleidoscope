@@ -15,6 +15,6 @@ llvm::Value* UnaryExprAST::codegen() {
     llvm::Function* F = getFunction(std::string("unary") + Opcode);
     if (!F)
         return LogErrorV("Unknown unary operator");
-
+    KSDbgInfo.emitLocation(this);
     return Builder->CreateCall(F, OperandV, "unop");
 }

@@ -5,16 +5,16 @@
 
 static void HandleDefinition() {
     if (auto FnAST = ParseDefinition()) {
-        if (auto* FnIR = FnAST->codegen()) {
-            fprintf(stderr, "Read function definition:");
-            FnIR->print(llvm::errs());
-            fprintf(stderr, "\n");
 #ifndef EXPORT_TO_OBJECT
+        if (auto* FnIR = FnAST->codegen()) {
             ExitOnErr(TheJIT->addModule(
                 llvm::orc::ThreadSafeModule(std::move(TheModule), std::move(TheContext))));
             InitializeModuleAndPassManager();
-#endif
         }
+#else
+        if (!FnAST->codegen())
+            fprintf(stderr, "Error reading function definition:");
+#endif
     } else {
         // Skip token for error recovery.
         getNextToken();
@@ -39,6 +39,7 @@ static void HandleTopLevelExpression() {
     // Evaluate a top-level expression into an anonymous function.
     if (auto FnAST = ParseTopLevelExpr()) {
         if (auto* FnIR = FnAST->codegen()) {
+#ifndef EXPORT_TO_OBJECT
             // Create a ResourceTracker to track JIT'd memory allocated to our
             // anonymous expression -- that way we can free it after executing.
             auto RT = TheJIT->getMainJITDylib().createResourceTracker();
@@ -58,7 +59,10 @@ static void HandleTopLevelExpression() {
             double (*FP)() = (double (*)())(intptr_t)ExprSymbol->getAddress();
             fprintf(stderr, "Evaluated to %f\n", FP());
             ExitOnErr(RT->remove());
-
+#endif
+            if (!FnIR) {
+                fprintf(stderr, "Error generating code for top level expr");
+            }
             // ------------- Non JIT --------------------//
             // fprintf(stderr, "Read top-level expression:");
             // FnIR->print(llvm::errs());
@@ -76,7 +80,9 @@ static void HandleTopLevelExpression() {
 /// top ::= definition | external | expression | ';'
 static void MainLoop() {
     while (true) {
+#ifndef DISABLE_INTERACTIVE
         fprintf(stderr, "ready> ");
+#endif
         switch (CurTok) {
             case tok_eof:
                 return;
@@ -106,18 +112,34 @@ int main() {
         BinopPrecedence['-'] = 20;
         BinopPrecedence['*'] = 40; // highest.
 
+#ifndef DISABLE_INTERACTIVE
         // Prime the first token.
         fprintf(stderr, "ready> ");
+#endif
         getNextToken();
 
         InitJIT();
         InitializeModuleAndPassManager();
+
+        // Create the compile unit for the module.
+        // Currently down as "fib.ks" as a filename since we're redirecting stdin
+        // but we'd like actual source locations.
+        KSDbgInfo.TheCU = DBuilder->createCompileUnit(
+            llvm::dwarf::DW_LANG_C,
+            DBuilder->createFile("fib.ks", "."),
+            "Kaleidoscope Compiler",
+            false,
+            "",
+            0);
 
         // Run the main "interpreter loop" now.
         MainLoop();
 
         // Print out all of the generated code.
         TheModule->print(llvm::errs(), nullptr);
+
+        DBuilder->finalize();
+
 #ifdef EXPORT_TO_OBJECT
         auto TargetTriple = llvm::sys::getDefaultTargetTriple();
         TheModule->setTargetTriple(TargetTriple);

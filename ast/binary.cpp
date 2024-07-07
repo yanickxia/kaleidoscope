@@ -10,6 +10,7 @@
 #include "variable.h"
 
 llvm::Value* BinaryExprAST::codegen() {
+    KSDbgInfo.emitLocation(this);
     llvm::Value* L = LHS->codegen();
     llvm::Value* R = RHS->codegen();
     if (!L || !R)

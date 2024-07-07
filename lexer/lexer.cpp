@@ -3,12 +3,25 @@
 //
 
 #include "lexer.h"
-
 #include "token.h"
 
 int CurTok;
 std::string IdentifierStr;
 double NumVal;
+
+SourceLocation CurLoc;
+SourceLocation LexLoc = {1, 0};
+
+int advance() {
+    int LastChar = getchar();
+
+    if (LastChar == '\n' || LastChar == '\r') {
+        LexLoc.Line++;
+        LexLoc.Col = 0;
+    } else
+        LexLoc.Col++;
+    return LastChar;
+}
 
 // The actual implementation of the lexer is a single function gettok()
 // It's called to return the next token from standard input
@@ -19,13 +32,12 @@ int gettok() {
 
     // The first thing we need to do is ignore whitespaces between tokens
     while (isspace(LastChar)) {
-        LastChar = getchar();
+        LastChar = advance();
     }
-
+    CurLoc = LexLoc;
     // Next thing is recognize identifier and specific keywords like "def"
     if (isalpha(LastChar)) {
         IdentifierStr = LastChar;
-
         // Stacking together all alphanumeric characters into IdentifierStr
         while (isalnum(LastChar = getchar())) {
             IdentifierStr += LastChar;
@@ -72,7 +84,7 @@ int gettok() {
 
         do {
             NumStr += LastChar;
-            LastChar = getchar();
+            LastChar = advance();
         } while (isdigit(LastChar) || LastChar == '.');
 
         // Convert numeric string to numeric value
@@ -85,7 +97,7 @@ int gettok() {
     // and return the next token
     if (LastChar == '#') {
         do {
-            LastChar = getchar();
+            LastChar = advance();
         } while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
 
         if (LastChar != EOF) {
@@ -100,7 +112,7 @@ int gettok() {
     }
 
     int ThisChar = LastChar;
-    LastChar = getchar();
+    LastChar = advance();
     return ThisChar;
 }
 

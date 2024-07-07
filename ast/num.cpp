@@ -6,6 +6,7 @@
 
 #include "../kaleidoscope/kaleidoscope.h"
 
-llvm::Value* NumberExprAST::codegen () {
-    return llvm::ConstantFP::get (*TheContext, llvm::APFloat (Val));
+llvm::Value* NumberExprAST::codegen() {
+    KSDbgInfo.emitLocation(this);
+    return llvm::ConstantFP::get(*TheContext, llvm::APFloat(Val));
 }

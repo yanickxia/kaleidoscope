@@ -17,14 +17,20 @@ class FunctionAST {
     std::unique_ptr<PrototypeAST> Proto;
     std::unique_ptr<ExprAST> Body;
 
-    public:
-    FunctionAST (std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body)
-    : Proto (std::move (Proto)), Body (std::move (Body)) {
-    }
+public:
+    FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body)
+        : Proto(std::move(Proto)), Body(std::move(Body)) {}
 
-    llvm::Function* codegen ();
+    llvm::Function* codegen();
+
+    llvm::raw_ostream& dump(llvm::raw_ostream& out, int ind) {
+        indent(out, ind) << "FunctionAST\n";
+        ++ind;
+        indent(out, ind) << "Body:";
+        return Body ? Body->dump(out, ind) : out << "null\n";
+    }
 };
 
-llvm::Function* getFunction (std::string Name);
+llvm::Function* getFunction(std::string Name);
 
 #endif // KALEIDOSCOPE_FUNCTION_H

@@ -18,12 +18,16 @@ class VariableExprAST : public ExprAST {
     std::string Name;
 
 public:
-    VariableExprAST(const std::string& Name) : Name(Name) {}
+    VariableExprAST(SourceLocation Loc, const std::string& Name) : ExprAST(Loc), Name(Name) {}
 
     llvm::Value* codegen() override;
 
     const std::string& getName() const {
         return Name;
+    }
+
+    llvm::raw_ostream &dump(llvm::raw_ostream &out, int ind) override {
+        return ExprAST::dump(out << Name, ind);
     }
 };
 

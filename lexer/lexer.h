@@ -17,4 +17,15 @@ extern std::string IdentifierStr;
 // If the current token is a numeric literal
 // NumVal holds its value
 extern double NumVal;
+
+struct SourceLocation {
+    int Line;
+    int Col;
+};
+
+extern SourceLocation CurLoc;
+extern SourceLocation LexLoc;
+
+int advance();
+
 #endif //KALEIDOSCOPE_LEXER_H

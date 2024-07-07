@@ -9,6 +9,7 @@
 
 #include "../jit/jit.h"
 #include "../llvm/llvm.h"
+#include "../ast/ast.h"
 
 // This is an object that owns LLVM core data structures
 extern std::unique_ptr<llvm::LLVMContext> TheContext;
@@ -30,7 +31,20 @@ extern std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 
 extern std::map<char, int> BinopPrecedence;
 
+extern std::unique_ptr<llvm::DIBuilder> DBuilder;
+
+
 void InitializeModuleAndPassManager();
 void InitJIT();
+llvm::DISubroutineType* CreateFunctionType(unsigned NumArgs, llvm::DIFile* Unit);
+
+
+inline struct DebugInfo {
+    llvm::DICompileUnit* TheCU;
+    llvm::DIType* DblTy;
+    std::vector<llvm::DIScope*> LexicalBlocks;
+    void emitLocation(ExprAST* AST);
+    llvm::DIType* getDoubleTy();
+} KSDbgInfo;
 
 #endif // KALEIDOSCOPE_KALEIDOSCOPE_H

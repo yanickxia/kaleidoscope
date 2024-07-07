@@ -12,7 +12,7 @@ llvm::Value* ForExprAST::codegen() {
 
     // Create an alloca for the variable in the entry block.
     llvm::AllocaInst* Alloca = CreateEntryBlockAlloca(TheFunction, VarName);
-
+    KSDbgInfo.emitLocation(this);
     // Emit the start code first, without 'variable' in scope.
     llvm::Value* StartVal = Start->codegen();
     if (!StartVal)

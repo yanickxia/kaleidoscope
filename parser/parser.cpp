@@ -32,10 +32,12 @@ std::unique_ptr<ExprAST> ParseParenExpr() {
 std::unique_ptr<ExprAST> ParseIdentifierExpr() {
     std::string IdName = IdentifierStr;
 
+    SourceLocation LitLoc = CurLoc;
+
     getNextToken(); // eat identifier.
 
     if (CurTok != '(') // Simple variable ref.
-        return std::make_unique<VariableExprAST>(IdName);
+        return std::make_unique<VariableExprAST>(LitLoc, IdName);
 
     // Call.
     getNextToken(); // eat (
@@ -59,10 +61,12 @@ std::unique_ptr<ExprAST> ParseIdentifierExpr() {
     // Eat the ')'.
     getNextToken();
 
-    return std::make_unique<CallExprAST>(IdName, std::move(Args));
+    return std::make_unique<CallExprAST>(LitLoc, IdName, std::move(Args));
 }
 
 static std::unique_ptr<ExprAST> ParseIfExpr() {
+    SourceLocation IfLoc = CurLoc;
+
     getNextToken(); // eat the if.
 
     // condition.
@@ -87,7 +91,7 @@ static std::unique_ptr<ExprAST> ParseIfExpr() {
     if (!Else)
         return nullptr;
 
-    return std::make_unique<IfExprAST>(std::move(Cond), std::move(Then), std::move(Else));
+    return std::make_unique<IfExprAST>(IfLoc, std::move(Cond), std::move(Then), std::move(Else));
 }
 
 /// forexpr ::= 'for' identifier '=' expr ',' expr (',' expr)? 'in' expression
@@ -245,6 +249,7 @@ std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<ExprAST> LH
             return LHS;
         // Okay, we know this is a binop.
         int BinOp = CurTok;
+        SourceLocation BinLoc = CurLoc;
         getNextToken(); // eat binop
 
         // Parse the unary expression after the binary operator.
@@ -260,7 +265,7 @@ std::unique_ptr<ExprAST> ParseBinOpRHS(int ExprPrec, std::unique_ptr<ExprAST> LH
                 return nullptr;
         }
         // Merge LHS/RHS.
-        LHS = std::make_unique<BinaryExprAST>(BinOp, std::move(LHS), std::move(RHS));
+        LHS = std::make_unique<BinaryExprAST>(BinLoc, BinOp, std::move(LHS), std::move(RHS));
     } // loop around to the top of the while loop.
 }
 
@@ -285,7 +290,7 @@ std::unique_ptr<ExprAST> ParseUnary() {
 ///   ::= binary LETTER number? (id, id)
 std::unique_ptr<PrototypeAST> ParsePrototype() {
     std::string FnName;
-
+    SourceLocation FnLoc = CurLoc;
     unsigned Kind = 0; // 0 = identifier, 1 = unary, 2 = binary.
     unsigned BinaryPrecedence = 30;
 
@@ -315,7 +320,7 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
             Kind = 2;
             getNextToken();
 
-            // Read the precedence if present.
+        // Read the precedence if present.
             if (CurTok == tok_number) {
                 if (NumVal < 1 || NumVal > 100)
                     return LogErrorP("Invalid precedence: must be 1..100");
@@ -341,7 +346,12 @@ std::unique_ptr<PrototypeAST> ParsePrototype() {
     if (Kind && ArgNames.size() != Kind)
         return LogErrorP("Invalid number of operands for operator");
 
-    return std::make_unique<PrototypeAST>(FnName, std::move(ArgNames), Kind != 0, BinaryPrecedence);
+    return std::make_unique<PrototypeAST>(
+        FnLoc,
+        FnName,
+        std::move(ArgNames),
+        Kind != 0,
+        BinaryPrecedence);
 }
 
 /// definition ::= 'def' prototype expression
@@ -364,9 +374,13 @@ std::unique_ptr<PrototypeAST> ParseExtern() {
 
 /// toplevelexpr ::= expression
 std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
+    SourceLocation FnLoc = CurLoc;
     if (auto E = ParseExpression()) {
         // Make an anonymous proto.
-        auto Proto = std::make_unique<PrototypeAST>("__anon_expr", std::vector<std::string>());
+        auto Proto = std::make_unique<PrototypeAST>(
+            FnLoc,
+            "main",
+            std::vector<std::string>());
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
     }
     return nullptr;

@@ -23,6 +23,14 @@ class ForExprAST : public ExprAST {
     }
 
     llvm::Value *codegen () override;
+    llvm::raw_ostream &dump(llvm::raw_ostream &out, int ind) override {
+        ExprAST::dump(out << "for", ind);
+        Start->dump(indent(out, ind) << "Cond:", ind + 1);
+        End->dump(indent(out, ind) << "End:", ind + 1);
+        Step->dump(indent(out, ind) << "Step:", ind + 1);
+        Body->dump(indent(out, ind) << "Body:", ind + 1);
+        return out;
+    }
 };
 
 #endif // KALEIDOSCOPE_FOR_H

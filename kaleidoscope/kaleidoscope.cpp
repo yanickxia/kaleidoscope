@@ -28,6 +28,9 @@ std::unique_ptr<llvm::legacy::FunctionPassManager> TheFPM;
 
 std::map<char, int> BinopPrecedence;
 
+std::unique_ptr<llvm::DIBuilder> DBuilder;
+
+
 void InitJIT() {
     llvm::InitializeAllTargetInfos();
     llvm::InitializeAllTargets();
@@ -63,6 +66,25 @@ void InitializeModuleAndPassManager() {
     // Create a new builder for the module.
     Builder = std::make_unique<llvm::IRBuilder<>>(*TheContext);
 
+    DBuilder = std::make_unique<llvm::DIBuilder>(*TheModule);
+    KSDbgInfo.TheCU = DBuilder->createCompileUnit(
+        llvm::dwarf::DW_LANG_C,
+        DBuilder->createFile("fib.ks", "."),
+        "Kaleidoscope Compiler",
+        0,
+        "",
+        0);
+
+    // Add the current debug info version into the module.
+    TheModule->addModuleFlag(
+        llvm::Module::Warning,
+        "Debug Info Version",
+        llvm::DEBUG_METADATA_VERSION);
+
+    // Darwin only supports dwarf2.
+    if (llvm::Triple(llvm::sys::getProcessTriple()).isOSDarwin())
+        TheModule->addModuleFlag(llvm::Module::Warning, "Dwarf Version", 2);
+
 #ifndef EXPORT_TO_OBJECT
     TheModule->setDataLayout(TheJIT->getDataLayout());
 
@@ -80,4 +102,42 @@ void InitializeModuleAndPassManager() {
 
     TheFPM->doInitialization();
 #endif
+}
+
+llvm::DIType* DebugInfo::getDoubleTy() {
+    if (DblTy)
+        return DblTy;
+
+    DblTy = DBuilder->createBasicType("double", 64, llvm::dwarf::DW_ATE_float);
+    return DblTy;
+}
+
+llvm::DISubroutineType* CreateFunctionType(unsigned NumArgs, llvm::DIFile* Unit) {
+    llvm::SmallVector<llvm::Metadata*, 8> EltTys;
+    llvm::DIType* DblTy = KSDbgInfo.getDoubleTy();
+
+    // Add the result type.
+    EltTys.push_back(DblTy);
+
+    for (unsigned i = 0, e = NumArgs; i != e; ++i)
+        EltTys.push_back(DblTy);
+
+    return DBuilder->createSubroutineType(DBuilder->getOrCreateTypeArray(EltTys));
+}
+
+
+void DebugInfo::emitLocation(ExprAST* AST) {
+    if (!AST)
+        return Builder->SetCurrentDebugLocation(llvm::DebugLoc());
+    llvm::DIScope* Scope;
+    if (LexicalBlocks.empty())
+        Scope = TheCU;
+    else
+        Scope = LexicalBlocks.back();
+    Builder->SetCurrentDebugLocation(
+        llvm::DILocation::get(
+            Scope->getContext(),
+            AST->getLine(),
+            AST->getCol(),
+            Scope));
 }

@@ -20,6 +20,9 @@ add_definitions(${LLVM_DEFINITIONS_LIST})
 # if export object file, should uncomment this
 add_definitions(-DEXPORT_TO_OBJECT)
 
+# if interactive, should uncomment this
+add_definitions(-DDISABLE_INTERACTIVE)
+
 #llvm_map_components_to_libnames(llvm_libs llvm)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -44,10 +47,3 @@ set(SOURCES
 
 add_executable(kaleidoscope ${SOURCES})
 target_link_libraries(kaleidoscope LLVM-14)
-
-
-
-# for example
-set(EXAMPLE_SOURCES example/main.cpp cmake-build-debug/output.o)
-add_executable(kaleidoscope_demo ${EXAMPLE_SOURCES})
-target_link_libraries(kaleidoscope_demo)

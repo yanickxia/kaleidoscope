@@ -18,15 +18,17 @@ class PrototypeAST {
     std::vector<std::string> Args;
     bool IsOperator;
     unsigned Precedence; // Precedence if a binary op.
+    int Line;
 
 public:
     PrototypeAST(
+        SourceLocation Loc,
         const std::string& name,
         std::vector<std::string> Args,
         bool IsOperator = false,
         unsigned Prec = 0)
         : Name(name), Args(std::move(Args)), IsOperator(IsOperator),
-          Precedence(Prec) {}
+          Precedence(Prec), Line(Loc.Line) {}
 
     llvm::Function* codegen();
 
@@ -49,6 +51,10 @@ public:
 
     unsigned getBinaryPrecedence() const {
         return Precedence;
+    }
+
+    int getLine() const {
+        return Line;
     }
 };
 #endif // KALEIDOSCOPE_PROTOTYPE_H

@@ -15,5 +15,6 @@ llvm::Value* VariableExprAST::codegen() {
     llvm::AllocaInst *A = NamedValues[Name];
     if (!A)
         LogErrorV("Unknown variable name");
+    KSDbgInfo.emitLocation(this);
     return Builder->CreateLoad(A->getAllocatedType(), A, Name.c_str());
 }
